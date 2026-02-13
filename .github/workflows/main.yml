@@ -4,7 +4,12 @@ jobs:
   security-and-archive:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
+
+      - name: Install server dependencies
+        run: |
+          cd server
+          npm install
 
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/node@master
@@ -12,9 +17,11 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: test
-          args: --sarif-file-output=snyk.sarif --file=server/package.json --severity-threshold=critical
 
-      - name: Upload result to GitHub Code Scanning (Optional visualization)
+          args: --file=server/package.json --all-projects=false --severity-threshold=high --sarif-file-output=snyk.sarif
+
+
+      - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
@@ -22,7 +29,7 @@ jobs:
 
       - name: Archive code if secure
         run: |
-          zip -r secure-code.zip . -x "*.git*" "node_modules/*"
+          zip -r secure-code.zip . -x "*.git*" "node_modules/*" "server/node_modules/*"
 
       - name: Upload Secure Artifact
         uses: actions/upload-artifact@v4
