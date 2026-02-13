@@ -15,6 +15,6 @@
   },
   "overrides": {
     "tar": "latest",
-    "ip": "2.0.1"
+    "socks": "^2.8.3"
   }
 }
