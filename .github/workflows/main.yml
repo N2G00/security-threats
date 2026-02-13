@@ -1,19 +1,31 @@
-name: Scan code with Snyk
+name: Scan and Archive Secure Code
 on: push
 jobs:
-  security:
+  security-and-archive:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
+
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/node@master
-        continue-on-error: true # To make sure that SARIF upload gets called
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: test
-          args: --sarif-file-output=snyk.sarif --all-projects
-      - name: Upload result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v2
+          args: --sarif-file-output=snyk.sarif --all-projects --severity-threshold=high
+
+      - name: Upload result to GitHub Code Scanning (Optional visualization)
+        uses: github/codeql-action/upload-sarif@v3
+        if: always() 
         with:
           sarif_file: snyk.sarif
+
+      - name: Archive code if secure
+        run: |
+          zip -r secure-code.zip . -x "*.git*" "node_modules/*"
+
+      - name: Upload Secure Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: secure-code-release
+          path: secure-code.zip
