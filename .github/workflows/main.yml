@@ -6,10 +6,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+
       - name: Install server dependencies
         run: |
           cd server
           npm install
+
 
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/node@master
@@ -17,8 +19,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: test
-
-          args: --file=server/package.json --all-projects=false --severity-threshold=high --sarif-file-output=snyk.sarif
+          args: --file=server/package.json --severity-threshold=high --sarif-file-output=snyk.sarif
 
 
       - name: Upload result to GitHub Code Scanning
@@ -27,13 +28,14 @@ jobs:
         with:
           sarif_file: snyk.sarif
 
+
       - name: Archive code if secure
         run: |
           zip -r secure-code.zip . -x "*.git*" "node_modules/*" "server/node_modules/*"
+
 
       - name: Upload Secure Artifact
         uses: actions/upload-artifact@v4
         with:
           name: secure-code-release
           path: secure-code.zip
-          #comment
